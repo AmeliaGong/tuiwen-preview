@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>长图文推文 · 文案风格预览（非最终设计）</title>
+<style>
+  :root{
+    --blue:#2b3fc4;
+    --blue2:#2638b8;
+    --bubble:rgba(52,62,168,.86);
+    --white:#fff8f2;
+    --cream:#ddd0b2;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:#2a211c;
+    font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+    color:var(--white);
+    padding:36px 16px 80px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .note{
+    max-width:800px;margin:0 auto 18px;text-align:center;
+    font-size:12px;letter-spacing:.18em;color:#a99a8c;
+  }
+  .poster{
+    position:relative;max-width:800px;margin:0 auto;overflow:hidden;
+    background:
+      radial-gradient(120% 60% at 20% 0%, rgba(255,206,160,.55) 0%, rgba(255,206,160,0) 60%),
+      radial-gradient(100% 50% at 90% 100%, rgba(90,35,18,.45) 0%, rgba(90,35,18,0) 60%),
+      linear-gradient(165deg,#e6a273 0%,#d5824b 30%,#c16632 62%,#98492a 100%);
+    box-shadow:0 30px 90px rgba(0,0,0,.55);
+  }
+  .grain{position:absolute;inset:0;pointer-events:none;opacity:.28;mix-blend-mode:multiply;z-index:9}
+  section{position:relative;padding:78px 74px;min-height:660px;display:flex;flex-direction:column;justify-content:center}
+  section::before{content:"";position:absolute;inset:0;pointer-events:none}
+  .p1::before{background:linear-gradient(180deg,rgba(255,220,180,.18),transparent 55%)}
+  .p2::before{background:linear-gradient(180deg,rgba(120,50,25,.12),rgba(120,50,25,.22))}
+  .p3::before{background:linear-gradient(180deg,rgba(90,40,20,.18),rgba(60,25,12,.30))}
+  .p4::before{background:linear-gradient(180deg,rgba(70,30,15,.28),rgba(110,45,20,.10))}
+  .p5::before{background:linear-gradient(180deg,rgba(230,160,110,.10),rgba(90,40,20,.20))}
+  .p6::before{background:linear-gradient(180deg,rgba(60,25,12,.34),rgba(150,65,30,.12))}
+  .p7::before{background:linear-gradient(180deg,rgba(150,65,30,.12),rgba(70,30,15,.26))}
+  .p8::before{background:linear-gradient(180deg,rgba(235,170,120,.14),rgba(90,40,20,.22))}
+  .p9::before{background:linear-gradient(180deg,rgba(80,35,18,.22),rgba(140,60,28,.10))}
+  .p10::before{background:linear-gradient(180deg,rgba(140,60,28,.10),rgba(70,30,15,.24))}
+  .p11::before{background:linear-gradient(180deg,rgba(255,215,175,.20),rgba(90,40,20,.18))}
+  section > *{position:relative;z-index:2}
+  .pin{
+    position:absolute;top:26px;right:30px;z-index:5;
+    font-size:11px;letter-spacing:.2em;color:rgba(255,245,235,.42);
+    border:1px solid rgba(255,245,235,.28);border-radius:20px;padding:3px 10px;
+  }
+
+  /* 手写涂鸦标题 */
+  .hand{
+    font-family:'Hanzipen SC','Xingkai SC','STXingkai','Yuanti SC','PingFang SC',sans-serif;
+    color:var(--blue);font-weight:700;letter-spacing:.04em;line-height:1.35;
+    text-shadow:1px 2px 0 rgba(255,255,255,.14);
+  }
+  .h-xl{font-size:64px;transform:rotate(-2.5deg)}
+  .h-lg{font-size:50px;transform:rotate(-1.8deg)}
+  .h-md{font-size:38px;transform:rotate(-1.2deg)}
+  .hand em{font-style:normal;font-size:1.15em}
+
+  /* 正文 */
+  .body{font-size:19px;line-height:2.05;color:rgba(255,250,244,.94);font-weight:400}
+  .body strong{font-weight:700;color:#fff}
+  .tiny{font-size:15px;line-height:1.95;color:rgba(255,248,240,.76)}
+  .gap-s{height:22px}.gap-m{height:40px}.gap-l{height:62px}
+
+  /* 蓝色不规则气泡 */
+  .bubble{
+    background:var(--bubble);color:#fff;font-size:20px;line-height:1.75;
+    padding:22px 34px;display:inline-block;align-self:flex-start;
+    border-radius:48% 52% 46% 54% / 56% 46% 54% 44%;
+    box-shadow:0 8px 30px rgba(30,25,90,.18);
+  }
+  .bubble.wide{border-radius:60px 70px 58px 66px / 70px 58px 66px 56px}
+  .bubble.right{align-self:flex-end}
+  .bubble.big{font-size:30px;font-weight:700;line-height:1.6;padding:30px 44px}
+  .bubble-row{display:flex;flex-direction:column;gap:18px;align-items:flex-start}
+  .bubble-row .bubble:nth-child(2){margin-left:110px}
+  .bubble-row .bubble:nth-child(3){margin-left:36px}
+
+  /* 关键词放大 */
+  .kw{
+    font-family:'Hanzipen SC','Xingkai SC','Yuanti SC',sans-serif;
+    color:var(--blue);font-weight:700;font-size:34px;display:block;
+    transform:rotate(-1.5deg);margin:2px 0 12px;
+  }
+  .kw.right{text-align:right;transform:rotate(1.5deg)}
+  .kw.inline{display:inline;font-size:1.35em;transform:none;color:#fff;font-family:inherit}
+
+  /* 清单 */
+  .list{list-style:none;display:flex;flex-direction:column;gap:13px}
+  .list li{font-size:18px;line-height:1.8;color:rgba(255,250,244,.93);padding-left:26px;position:relative}
+  .list.dot li::before{content:"";position:absolute;left:0;top:12px;width:10px;height:10px;border-radius:50%;background:var(--blue)}
+  .list.num{counter-reset:n}
+  .list.num li{padding-left:44px}
+  .list.num li::before{
+    counter-increment:n;content:counter(n);position:absolute;left:0;top:-2px;
+    font-family:'Hanzipen SC','Yuanti SC',sans-serif;font-size:26px;font-weight:700;color:var(--blue)
+  }
+  .list li b{color:#fff;font-weight:700}
+  .list li .tagtime{
+    display:inline-block;font-family:'Hanzipen SC','Yuanti SC',sans-serif;
+    font-size:26px;font-weight:700;color:#fff;background:var(--bubble);
+    padding:1px 14px;border-radius:30px 24px 28px 22px;margin-right:8px;transform:rotate(-1deg)
+  }
+
+  /* 引语气泡 */
+  .quotes{display:flex;flex-direction:column;gap:22px}
+  .quote{
+    background:rgba(70,62,140,.72);border-radius:22px;padding:22px 28px;
+    font-size:18px;line-height:1.85;color:#fff;position:relative;max-width:88%;
+  }
+  .quote:nth-child(2){align-self:flex-end;background:rgba(60,55,130,.62)}
+  .quote:nth-child(3){max-width:80%}
+  .quote::after{
+    content:"";position:absolute;bottom:-14px;left:44px;
+    border-width:16px 16px 0 0;border-style:solid;
+    border-color:rgba(70,62,140,.72) transparent transparent transparent;
+  }
+  .quote:nth-child(2)::after{left:auto;right:44px;border-width:16px 0 0 16px;border-color:rgba(60,55,130,.62) transparent transparent transparent}
+  .quote span{display:block;margin-top:8px;font-size:14px;color:rgba(255,255,255,.65);text-align:right}
+
+  /* 蓝底小标题块 */
+  .block{
+    background:var(--bubble);border-radius:70px 90px 74px 84px / 88px 70px 86px 72px;
+    padding:26px 38px;align-self:flex-start;font-size:27px;font-weight:700;line-height:1.6;
+  }
+
+  /* 信息条 / 尾卡 */
+  .infobar{
+    background:rgba(255,245,230,.16);border:1px solid rgba(255,245,230,.3);
+    border-radius:14px;padding:16px 22px;font-size:15px;letter-spacing:.04em;
+    color:rgba(255,250,242,.9);text-align:center;
+  }
+  .card{
+    background:var(--cream);color:#3a3026;border-radius:6px;padding:34px 38px;
+    display:flex;align-items:center;gap:30px;margin-top:34px;
+  }
+  .qr{
+    width:132px;height:132px;flex:none;background:#fff;
+    border:2px dashed #9a8c72;border-radius:4px;
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    font-size:12px;color:#9a8c72;line-height:1.6;padding:10px;
+  }
+  .card .txt{font-size:17px;line-height:2}
+  .card .txt b{display:block;font-size:22px;margin-bottom:4px}
+  .dots{font-family:'Hanzipen SC',sans-serif;font-size:40px;color:var(--blue);letter-spacing:.3em;line-height:1}
+
+  /* P1 弧排 */
+  .arc{font-size:52px;text-align:center;letter-spacing:.02em;margin-bottom:56px}
+  .arc span{display:inline-block}
+  .arc span:nth-child(1){transform:rotate(-16deg) translateY(6px)}
+  .arc span:nth-child(2){transform:rotate(-10deg)}
+  .arc span:nth-child(3){transform:rotate(-4deg)}
+  .arc span:nth-child(4){transform:rotate(2deg)}
+  .arc span:nth-child(5){transform:rotate(8deg)}
+  .arc span:nth-child(6){transform:rotate(14deg) translateY(8px)}
+  .figure{
+    height:210px;border-radius:50% 50% 46% 54% / 60% 58% 42% 40%;
+    background:radial-gradient(circle at 45% 35%,rgba(255,225,190,.5),rgba(120,50,25,.35) 70%);
+    border:2px dashed rgba(255,240,225,.35);
+    display:flex;align-items:center;justify-content:center;
+    color:rgba(255,245,235,.6);font-size:14px;letter-spacing:.2em;margin:0 auto 34px;
+    width:76%;
+  }
+  .brush{
+    height:16px;background:var(--blue);width:62%;align-self:flex-end;
+    border-radius:60% 40% 55% 45% / 70% 60% 40% 30%;transform:rotate(-4deg);
+    opacity:.85;margin-top:30px;
+  }
+  @media(max-width:640px){
+    section{padding:54px 30px;min-height:560px}
+    .h-xl{font-size:44px}.h-lg{font-size:36px}.h-md{font-size:29px}
+    .body{font-size:16px}.bubble{font-size:17px}.bubble.big{font-size:23px}
+    .kw{font-size:27px}.list li{font-size:16px}.quote{font-size:16px;max-width:96%}
+    .bubble-row .bubble:nth-child(2){margin-left:40px}
+    .card{flex-direction:column;align-items:flex-start}
+  }
+</style>
+</head>
+<body>
+
+<div class="note">文 案 风 格 预 览 · 非 最 终 设 计 · 放 大 词 已 按 视 觉 层 级 标 出</div>
+
+<div class="poster">
+<svg class="grain" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+  <filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
+  <rect width="100%" height="100%" filter="url(#n)" opacity="0.5"/>
+</svg>
+
+<!-- P1 -->
+<section class="p1">
+  <span class="pin">P1</span>
+  <div class="arc hand">
+    <span>嘿</span><span>～</span><span>你</span><span>是</span><span>否</span><span>也</span>
+  </div>
+  <div class="hand h-xl" style="text-align:center;margin-bottom:44px">想 要 … …</div>
+  <div class="figure">［ 人 物 ／ 手 部 特 写 ］</div>
+  <div class="bubble wide" style="font-size:26px;align-self:center">想休息，但 <span style="font-weight:700;font-size:1.25em">不敢停下来</span> ？</div>
+  <div class="gap-m"></div>
+  <p class="tiny" style="text-align:center">不是不能，是没人给过自己这个许可。</p>
+</section>
+
+<!-- P2 -->
+<section class="p2">
+  <span class="pin">P2</span>
+  <div class="bubble-row">
+    <div class="bubble">把人生，当成一个整体来看</div>
+    <div class="bubble">不只是心理健康，更是 <b>心理潜能</b></div>
+    <div class="bubble">在别人的可能性里，看见启发</div>
+  </div>
+  <div class="gap-l"></div>
+  <p class="body">心理健康是底线。我们更想聊的，是你身上那股潜藏的、还没被用出来的能量。<br>它需要你把人生当成一个整体，慢慢看——这也是我们做这场展的原因。</p>
+</section>
+
+<!-- P3 -->
+<section class="p3">
+  <span class="pin">P3</span>
+  <div class="hand h-lg" style="margin-bottom:40px">平时的你，都在干嘛</div>
+  <div class="kw">职场内耗</div>
+  <ul class="list dot">
+    <li>会上被否了一句，接下来两小时什么都没听进去</li>
+    <li>一句话在心里重播一整晚</li>
+    <li>一天没干正事，却累得说不出话</li>
+  </ul>
+  <div class="gap-m"></div>
+  <div class="kw right">办公室人际</div>
+  <ul class="list dot">
+    <li>下班前反复改邮件措辞，怕说错一个字</li>
+    <li>休假前交代得清清楚楚，休假时还在想工作</li>
+    <li>真正的消耗，常常不是工作本身</li>
+  </ul>
+  <div class="gap-m"></div>
+  <div class="figure" style="height:120px;width:70%">［ 人 物 拼 贴 ］</div>
+</section>
+
+<!-- P4 -->
+<section class="p4">
+  <span class="pin">P4</span>
+  <div class="kw">被皮质醇控制</div>
+  <ul class="list dot">
+    <li>想做点自己的事，下班只剩一口气</li>
+    <li>想试新的东西，一开始不擅长就想放弃</li>
+    <li>想介绍自己，除了职位和收入想不出别的说法</li>
+  </ul>
+  <div class="gap-m"></div>
+  <div class="kw right">想 gap，不敢 gap</div>
+  <ul class="list dot">
+    <li>想跳槽，跳来跳去还是同一类处境</li>
+    <li>想 gap，但没收入就没有安全感</li>
+    <li>不敢停，一停就怕被同龄人超过</li>
+  </ul>
+  <div class="gap-m"></div>
+  <div class="bubble big right" style="align-self:center;text-align:center">不是不想，是不敢。<br>不是不能，是不敢给自己许可。</div>
+  <div class="brush"></div>
+</section>
+
+<!-- P5 -->
+<section class="p5">
+  <span class="pin">P5</span>
+  <div class="hand h-lg" style="text-align:center;margin-bottom:52px">有些累，<br>不是因为你不够努力</div>
+  <ul class="list dot" style="gap:22px;font-size:20px">
+    <li style="font-size:20px">把 <b>职业</b> 变成生活的全部，你绝对不会开心。</li>
+    <li style="font-size:20px">人的 <b>价值</b>，不能一直由组织来定义。</li>
+    <li style="font-size:20px"><b>情绪</b> 不是麻烦，是有些需求一直没被满足。</li>
+  </ul>
+  <div class="gap-l"></div>
+  <p class="tiny" style="text-align:center">只是没人教过我们，怎么调节自己、怎么发展自己。</p>
+  <div class="dots" style="text-align:center;margin-top:26px">●</div>
+</section>
+
+<!-- P6 -->
+<section class="p6">
+  <span class="pin">P6</span>
+  <div class="hand h-lg" style="margin-bottom:36px">我不是例外</div>
+  <div class="figure" style="height:150px;width:70%;margin-bottom:34px">［ Coco 照 片 · 待 补 ］<br>大 理 写 小 说 ／ 拍 摄 现 场</div>
+  <p class="body">gap 那一年，我到大理写小说。慢慢地，感知力回来了：开始爬山、看云、把日子过出节奏，一边写，一边重新学心理学，弄清自己到底想要什么。</p>
+  <div class="gap-s"></div>
+  <p class="body">后来我拿起摄像机，和另一个人干了一个剧组的活，拍完了自己的纪录片。写小说让我安静，但只有真正在创作的时候，它会调动我全身的能量，甚至改变我的激素水平。</p>
+  <div class="gap-s"></div>
+  <p class="body">我这才找到人生的新定位——原来打开自己的方式，不止一种。</p>
+  <div class="gap-l"></div>
+  <div class="hand h-md" style="text-align:right">原来，热爱是有生理反应的。</div>
+</section>
+
+<!-- P7 -->
+<section class="p7">
+  <span class="pin">P7</span>
+  <p class="tiny" style="margin-bottom:34px">我的 gap 并没有让我变得更糟，它让我变得更好。</p>
+  <div class="hand h-lg" style="margin-bottom:44px">往期探索者说</div>
+  <div class="quotes">
+    <div class="quote">「上班高效安排好，到点开开心心下班。到点就走，消息第二天再回——真正的消耗来自办公室人际，不是工作本身。」<span>—— 张素　（ 照 片 待 补 ）</span></div>
+    <div class="quote">「养猫、见朋友、旅行、读书、看剧。我不后悔辞职。」<span>—— 翡冷翠　（ 照 片 待 补 ）</span></div>
+    <div class="quote">「我以前总觉得，遇到问题就该自己消化、情绪也该自己消化。后来才开始听听别人的声音，认知才慢慢拓宽。」<span>—— 翡冷翠　（ 照 片 待 补 ）</span></div>
+  </div>
+  <div class="gap-m"></div>
+  <p class="tiny">大学生 ／ 职场 ／ 创业 ／ 婚恋焦虑 …… 10 个新身份，10 句心声<br>（ 每位探索者 1 张照片 + 1 句心声 · 待补 ）</p>
+</section>
+
+<!-- P8 -->
+<section class="p8">
+  <span class="pin">P8</span>
+  <div class="hand h-md" style="margin-bottom:18px">gap 期间，我们学到的重要课题</div>
+  <div class="block" style="margin-bottom:40px">人生是一个协同系统<br><span style="font-size:18px;font-weight:400">更有活力的人生，不止一件事。</span></div>
+  <ul class="list num">
+    <li><b>睡眠</b>｜夜里替你整合白天的记忆、消解恐惧。睡不好，第二天的压力和恐惧就没被消化掉。</li>
+    <li><b>运动</b>｜短暂的多巴胺，长久的内啡肽。力量训练给的是「做成一件事」的可重复反馈。</li>
+    <li><b>奖赏机制</b>｜没有健康的奖赏回路，人会开始回避，动力一点点消失。</li>
+    <li><b>精神 · 阅读 · 亲密关系</b>｜它们和皮质醇水平、友好的社区支持一起，共同构成你的状态。</li>
+    <li><b>多元评价体系</b>｜在另一个国家生活过，你会多一套对人生的定义；再回头看，框架就不止一个了。</li>
+  </ul>
+  <div class="dots" style="margin:18px 0 30px">… … … …</div>
+  <p class="body"><strong>这些，学校不教，公司不培训，只能自己补上。</strong><br>我们把这部分，叫做 <span class="kw inline">自我教育</span>。</p>
+</section>
+
+<!-- P9 -->
+<section class="p9">
+  <span class="pin">P9</span>
+  <div class="hand h-lg" style="margin-bottom:16px">给自己留一个入口</div>
+  <p class="tiny" style="margin-bottom:38px">我们不是在劝你辞职。按你现在拿得出的时间，挑一个就好。</p>
+  <ul class="list dot" style="gap:17px">
+    <li><span class="tagtime">一整年</span> 慢慢 gap。先来共居一周，验证「我到底能不能停」，再把这一年交给自己的节奏。</li>
+    <li><span class="tagtime">一周</span> 来大理共居。同吃同住、做工作坊、共创一件作品，带走一位互助搭子。</li>
+    <li><span class="tagtime">三天</span> 元旦影响力伙伴游学。把「要不要开始」变成「我已经开始了」。</li>
+    <li><span class="tagtime">一个晚上</span> 来看「生命之流」艺术展。两小时，站在别人的 gap 里，看一眼自己的。</li>
+    <li><span class="tagtime">一小时</span> 线上工作坊。把那个绕不开的卡点翻出来，看清它从哪来。不用请假，不用出门。</li>
+  </ul>
+  <div class="gap-m"></div>
+  <div class="hand h-md" style="line-height:1.5">别再等「先稳定下来」。<br>稳定不是开始的前提，<br>是试过之后，才知道要稳住什么。</div>
+  <div class="gap-m"></div>
+  <div class="infobar">11 月底 ·「生命之流」艺术展　／　元旦 · 影响力伙伴游学　／　1 月底 · 人生学校 App</div>
+</section>
+
+<!-- P10 -->
+<section class="p10">
+  <span class="pin">P10</span>
+  <div class="hand h-lg" style="margin-bottom:44px">你会带走 ……</div>
+  <ul class="list dot" style="gap:24px;font-size:20px">
+    <li style="font-size:20px">一位 <b>互助搭子</b>：带一份礼物来，收一份礼物走。</li>
+    <li style="font-size:20px">一套 <b>百岁人生探索卡片 × AI 教练</b>：看见最深的卡点，也看见你潜藏的天赋潜能。</li>
+    <li style="font-size:20px">一件 <b>共同完成的群体作品</b>：陈列在线下空间，也有机会进入线上展。</li>
+  </ul>
+  <div class="gap-l"></div>
+  <p class="tiny">你在这里完成的思考，也会入驻这场展。<br>这场展，献给所有想按下暂停键的职场人。</p>
+</section>
+
+<!-- P11 -->
+<section class="p11">
+  <span class="pin">P11</span>
+  <div class="hand h-xl" style="text-align:center;line-height:1.45">如果一生有 100 岁，<br>让我们花一段时间，<br>一起 gap。</div>
+  <div class="gap-l"></div>
+  <p class="tiny" style="text-align:center;font-size:17px">你终于来了。可以慢下来了。</p>
+  <div class="gap-m"></div>
+  <p class="tiny" style="text-align:center;max-width:76%;margin:0 auto;font-size:13px;opacity:.7">
+    这一年像掉进一个时空夹缝：外面的时间还在走，我这里先停一停。<br>等快退休的时候，再把它要回来，还能提早退休。
+  </p>
+  <div class="card">
+    <div class="qr">二维码<br>待补</div>
+    <div class="txt"><b>WeStream ×「生命之流」艺术展</b>报名入口 ／ 公众号 ／ 线上工作坊<br><span style="opacity:.6;font-size:14px">（名称与入口待确认）</span></div>
+  </div>
+</section>
+
+</div>
+</body>
+</html>
